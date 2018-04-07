@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,7 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView;
     private ArrayList<TILPost> TILArray = new ArrayList<>();
     private TILAdapter tilAdapter;
-    private static final String REDDIT_TIL_URL = "https://www.reddit.com/r/todayilearned/new.json";
+    private static final String REDDIT_TIL_URL =
+            "https://www.reddit.com/r/todayilearned/new.json?limit=100";
     private String JSONString = "";
 
     @Override
@@ -59,7 +61,17 @@ public class MainActivity extends AppCompatActivity {
 
     //OKHTTP implementation
     private String fetchJSON(String url) throws IOException, NullPointerException {
-        OkHttpClient client = new OkHttpClient();
+//        OkHttpClient client = new OkHttpClient().connectTimeout(10, TimeUnit.SECONDS)
+//                .writeTimeout(10, TimeUnit.SECONDS)
+//                .readTimeout(30, TimeUnit.SECONDS).build();
+
+        //override timeouts to ensure receiving full JSON
+        OkHttpClient.Builder b = new OkHttpClient.Builder();
+        b.connectTimeout(15, TimeUnit.SECONDS);
+        b.readTimeout(15, TimeUnit.SECONDS);
+        b.writeTimeout(15, TimeUnit.SECONDS);
+
+        OkHttpClient client = b.build();
 
         Request request = new Request.Builder()
                 .url(url)

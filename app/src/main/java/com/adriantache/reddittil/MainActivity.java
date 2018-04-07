@@ -1,11 +1,15 @@
 package com.adriantache.reddittil;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.adriantache.reddittil.adapter.TILAdapter;
@@ -46,11 +50,24 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout = findViewById(R.id.swipe_refresh);
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        //todo implement onItemClickListener
+        //open URL on click
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                TILPost tilPost = (TILPost) adapterView.getItemAtPosition(i);
+                Uri webPage = Uri.parse(tilPost.getUrl());
+                Intent intent = new Intent(Intent.ACTION_VIEW, webPage);
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
 
+        //start task to fetch data from Reddit
         new TILAsyncTask().execute();
     }
 
+    //create the adapter to populate the ListView; if it exists, empty it first
     private void createAdapter() {
         tilAdapter = new TILAdapter(this, TILArray);
         if (!TextUtils.isEmpty(JSONString)) extractJSON(JSONString);
@@ -59,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     //todo replace ListView with RecyclerView
 
-    //todo implement drag down to refresh
+    //todo add EditText to pick subreddit, or a Spinner to select a preset list
 
     //todo add Firebase database integration to store TIL posts
 
@@ -74,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         b.connectTimeout(15, TimeUnit.SECONDS);
         b.readTimeout(15, TimeUnit.SECONDS);
         b.writeTimeout(15, TimeUnit.SECONDS);
-
         OkHttpClient client = b.build();
 
         Request request = new Request.Builder()
@@ -85,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         return response.body().string();
     }
 
-    //todo JSON parsing code
+    //JSON parsing code
     private void extractJSON(String JSONString) {
         try {
             JSONObject root = new JSONObject(JSONString);
@@ -103,7 +119,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         }
     }
 
-    //todo reference this after parsing new JSON
+    //todo reference this after parsing new JSON (after implementing storage);
+    //todo after this remove duplicates
     private void sortArrayList() {
         Collections.sort(TILArray, new Comparator<TILPost>() {
             @Override
@@ -114,12 +131,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         });
     }
 
+    //action on refresh of SwipeRefreshLayout
     @Override
     public void onRefresh() {
         TILArray = new ArrayList<>();
         new TILAsyncTask().execute();
     }
 
+    //todo replace AsyncTask with Loader
     private class TILAsyncTask extends AsyncTask<Void, Void, Void> {
 
         @Override

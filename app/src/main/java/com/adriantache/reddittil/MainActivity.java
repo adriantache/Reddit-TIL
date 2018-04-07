@@ -2,6 +2,7 @@ package com.adriantache.reddittil;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,8 +24,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
+    private SwipeRefreshLayout swipeRefreshLayout;
     private static final String TAG = "MainActivity";
     //private RecyclerView recyclerView;
     private ListView listView;
@@ -41,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
         //recyclerView = findViewById(R.id.recycler_view);
         listView = findViewById(R.id.list_view);
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh);
+        swipeRefreshLayout.setOnRefreshListener(this);
 
         //todo implement onItemClickListener
 
@@ -110,10 +114,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onRefresh() {
+        TILArray = new ArrayList<>();
+        new TILAsyncTask().execute();
+    }
+
     private class TILAsyncTask extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            swipeRefreshLayout.setRefreshing(true);
             try {
                 JSONString = fetchJSON(REDDIT_TIL_URL);
             } catch (IOException e) {
@@ -127,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            swipeRefreshLayout.setRefreshing(false);
             createAdapter();
         }
     }

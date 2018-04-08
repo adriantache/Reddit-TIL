@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.adriantache.reddittil.adapter.TILAdapter;
@@ -64,7 +65,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         });
 
         //start task to fetch data from Reddit
-        new TILAsyncTask().execute();
+        swipeRefreshLayout.setRefreshing(true);
+        new TILAsyncTask().execute(REDDIT_TIL_URL);
     }
 
     //create the adapter to populate the ListView; if it exists, empty it first
@@ -76,16 +78,23 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     //todo replace ListView with RecyclerView
 
-    //todo add EditText to pick subreddit, or a Spinner to select a preset list
+    //EditText to pick subreddit
+    public void fetch(View v) {
+        EditText editText = findViewById(R.id.edit_text);
+        String subreddit = editText.getText().toString();
+        editText.setText("");
+
+        swipeRefreshLayout.setRefreshing(true);
+        TILArray = new ArrayList<>();
+        if (TextUtils.isEmpty(subreddit)) new TILAsyncTask().execute(REDDIT_TIL_URL);
+        else
+            new TILAsyncTask().execute("https://www.reddit.com/r/" + subreddit + "/new.json?limit=100");
+    }
 
     //todo add Firebase database integration to store TIL posts
 
     //OKHTTP implementation
     private String fetchJSON(String url) throws IOException, NullPointerException {
-//        OkHttpClient client = new OkHttpClient().connectTimeout(10, TimeUnit.SECONDS)
-//                .writeTimeout(10, TimeUnit.SECONDS)
-//                .readTimeout(30, TimeUnit.SECONDS).build();
-
         //override timeouts to ensure receiving full JSON
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.connectTimeout(15, TimeUnit.SECONDS);
@@ -134,24 +143,24 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     //action on refresh of SwipeRefreshLayout
     @Override
     public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
         TILArray = new ArrayList<>();
-        new TILAsyncTask().execute();
+        new TILAsyncTask().execute(REDDIT_TIL_URL);
     }
 
     //todo replace AsyncTask with Loader
-    private class TILAsyncTask extends AsyncTask<Void, Void, Void> {
+    private class TILAsyncTask extends AsyncTask<String, Void, Void> {
 
         @Override
-        protected Void doInBackground(Void... voids) {
-            swipeRefreshLayout.setRefreshing(true);
+        protected Void doInBackground(String... strings) {
             try {
-                JSONString = fetchJSON(REDDIT_TIL_URL);
+                if (strings.length > 0)
+                    if (!TextUtils.isEmpty(strings[0])) JSONString = fetchJSON(strings[0]);
             } catch (IOException e) {
                 Log.e(TAG, "Cannot fetch JSON from URL", e);
             } catch (NullPointerException e) {
                 Log.e(TAG, "Cannot fetch JSON from URL", e);
             }
-
             return null;
         }
 

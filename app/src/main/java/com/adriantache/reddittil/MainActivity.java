@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private static final String REDDIT_TIL_URL =
             "https://www.reddit.com/r/todayilearned/new.json?limit=100";
     private String JSONString = "";
+    private String subreddit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +82,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     //EditText to pick subreddit
     public void fetch(View v) {
         EditText editText = findViewById(R.id.edit_text);
-        String subreddit = editText.getText().toString();
-        editText.setText("");
+        subreddit = editText.getText().toString();
 
         swipeRefreshLayout.setRefreshing(true);
         TILArray = new ArrayList<>();
@@ -145,7 +145,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         TILArray = new ArrayList<>();
-        new TILAsyncTask().execute(REDDIT_TIL_URL);
+
+        if (TextUtils.isEmpty(subreddit)) new TILAsyncTask().execute(REDDIT_TIL_URL);
+        else
+            new TILAsyncTask().execute("https://www.reddit.com/r/" + subreddit + "/new.json?limit=100");
     }
 
     //todo replace AsyncTask with Loader

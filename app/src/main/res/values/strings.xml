@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Reddit TIL</string>
+    <string name="enter_subreddit_name">Enter subreddit name</string>
+    <string name="fetch">fetch</string>
 </resources>

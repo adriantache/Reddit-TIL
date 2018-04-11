@@ -13,6 +13,7 @@
         android:layout_height="match_parent">
 
         <EditText
+            android:inputType="textNoSuggestions"
             android:id="@+id/edit_text"
             android:hint="@string/enter_subreddit_name"
             android:layout_width="0dp"

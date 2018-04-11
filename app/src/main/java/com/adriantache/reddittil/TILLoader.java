@@ -1,5 +1,6 @@
 package com.adriantache.reddittil;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.support.annotation.NonNull;

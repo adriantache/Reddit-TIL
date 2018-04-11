@@ -1,6 +1,7 @@
 package com.adriantache.reddittil;
 
 import android.content.Context;
+import android.database.ContentObserver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.AsyncTaskLoader;
@@ -34,9 +35,14 @@ public class TILLoader extends AsyncTaskLoader<List<TILPost>> {
     @Nullable
     @Override
     public List<TILPost> loadInBackground() {
+        String JSONString = "";
+
+        Log.i("XXXXXXXXXXX"
+                , "loadInBackground: "+url);
+
         //get JSON String
         try {
-            if (!TextUtils.isEmpty(url)) mainActivity.JSONString = mainActivity.fetchJSON(url);
+            if (!TextUtils.isEmpty(url)) JSONString = mainActivity.fetchJSON(url);
         } catch (IOException e) {
             Log.e(MainActivity.TAG, "Cannot fetch JSON from URL", e);
         } catch (NullPointerException e) {
@@ -47,7 +53,7 @@ public class TILLoader extends AsyncTaskLoader<List<TILPost>> {
 
         //parse JSON String
         try {
-            JSONObject root = new JSONObject(mainActivity.JSONString);
+            JSONObject root = new JSONObject(JSONString);
             JSONObject data = root.getJSONObject("data");
             JSONArray children = data.getJSONArray("children");
 

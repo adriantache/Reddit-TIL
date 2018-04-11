@@ -2,6 +2,7 @@ package com.adriantache.reddittil;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
@@ -33,8 +34,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     static final String TAG = "MainActivity";
     private static final String REDDIT_TIL_URL =
             "https://www.reddit.com/r/todayilearned/new.json?limit=100";
-    String JSONString = "";
-    String subreddit;
+    private String subreddit;
     private SwipeRefreshLayout swipeRefreshLayout;
     //private RecyclerView recyclerView;
     private ListView listView;
@@ -64,11 +64,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         //start task to fetch data from Reddit
         swipeRefreshLayout.setRefreshing(true);
-        getSupportLoaderManager().initLoader(0, null, this);
+        getSupportLoaderManager().initLoader(1, null, this);
     }
 
     //create the adapter to populate the ListView; if it exists, empty it first
     private void createAdapter(List<TILPost> TILArray) {
+        swipeRefreshLayout.setRefreshing(false);
+
         TILAdapter tilAdapter = new TILAdapter(this, TILArray);
         listView.setAdapter(tilAdapter);
     }
@@ -82,7 +84,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         subreddit = editText.getText().toString();
 
         swipeRefreshLayout.setRefreshing(true);
-        getSupportLoaderManager().initLoader(0, null, this);
+
+        getSupportLoaderManager().restartLoader(1,null,this);
     }
 
 
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .build();
 
         Response response = client.newCall(request).execute();
+
         return response.body().string();
     }
 
@@ -110,7 +114,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             @Override
             public int compare(TILPost lhs, TILPost rhs) {
                 // -1 - less than, 1 - greater than, 0 - equal, all inverted for descending
-                return lhs.getTime() > rhs.getTime() ? -1 : (lhs.getTime() < rhs.getTime()) ? 1 : 0;
+                if (Build.VERSION.SDK_INT >= 19)
+                    return Long.compare(lhs.getTime(), rhs.getTime()) * -1;
+                else
+                    return lhs.getTime() > rhs.getTime() ? -1 : (lhs.getTime() < rhs.getTime()) ? 1 : 0;
             }
         });
     }
@@ -118,27 +125,30 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     //action on refresh of SwipeRefreshLayout
     @Override
     public void onRefresh() {
+        getLoaderManager().destroyLoader(1);
         swipeRefreshLayout.setRefreshing(true);
-        getSupportLoaderManager().initLoader(0, null, this);
+        getSupportLoaderManager().initLoader(1, null, this).forceLoad();
     }
 
     @Override
+    @NonNull
     public Loader<List<TILPost>> onCreateLoader(int id, Bundle args) {
-        if (TextUtils.isEmpty(subreddit))
+        if (TextUtils.isEmpty(subreddit)) {
             return new TILLoader(this, MainActivity.this, REDDIT_TIL_URL);
-        else return new TILLoader(this, MainActivity.this, "https://www.reddit.com/r/" +
-                subreddit + "/new.json?limit=100");
+        } else {
+            return new TILLoader(this, MainActivity.this,
+                    "https://www.reddit.com/r/" + subreddit + "/new.json?limit=100");
+        }
     }
 
     @Override
     public void onLoadFinished(@NonNull Loader<List<TILPost>> loader, List<TILPost> data) {
-        swipeRefreshLayout.setRefreshing(false);
         createAdapter(data);
     }
 
 
     @Override
-    public void onLoaderReset(Loader<List<TILPost>> loader) {
+    public void onLoaderReset(@NonNull Loader<List<TILPost>> loader) {
         createAdapter(new ArrayList<TILPost>());
     }
 

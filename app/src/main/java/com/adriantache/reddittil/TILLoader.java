@@ -1,8 +1,6 @@
 package com.adriantache.reddittil;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.database.ContentObserver;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.AsyncTaskLoader;
@@ -37,9 +35,6 @@ public class TILLoader extends AsyncTaskLoader<List<TILPost>> {
     @Override
     public List<TILPost> loadInBackground() {
         String JSONString = "";
-
-        Log.i("XXXXXXXXXXX"
-                , "loadInBackground: "+url);
 
         //get JSON String
         try {
